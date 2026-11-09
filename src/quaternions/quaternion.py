@@ -29,11 +29,14 @@ class Quaternion:
     def conjugate(self):
         return Quaternion(self.w, -self.x, -self.y, -self.z)
 
+    def norm_sq(self):
+        return self.w**2 + self.x**2 + self.y**2 + self.z**2     
+    
     def norm(self):
-        return math.sqrt(sum(c * c for c in self._components()))
+        return math.sqrt(self.norm_sq())   
 
     def inverse(self):
-        n2 = self.norm() ** 2
+        n2 = self.norm_sq()
         if n2 == 0:
             raise ZeroDivisionError("нулевой кватернион необратим")
         c = self.conjugate()
@@ -51,8 +54,11 @@ class Quaternion:
 
     def rotate(self, v):
         """Поворот вектора v=(x, y, z) по формуле q v q^-1."""
-        r = self * Quaternion(0, *v) * self.inverse()
-        return (r.x, r.y, r.z)
+        n2 = self.norm_sq()
+        if n2 == 0:
+            raise ZeroDivisionError("нулевой кватернион необратим")
+        r = self * Quaternion(0, *v) * self.conjugate()
+        return (r.x / n2, r.y / n2, r.z / n2)
 
     def __eq__(self, other):
         if not isinstance(other, Quaternion):
@@ -62,7 +68,7 @@ class Quaternion:
             for a, b in zip(self._components(), other._components())
         )
 
-    __hash__ = None
+    # __hash__ = None
 
     def __repr__(self):
         return f"Quaternion({self.w}, {self.x}, {self.y}, {self.z})"
